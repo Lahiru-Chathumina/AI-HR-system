@@ -24,11 +24,13 @@ interface AuthContextType {
   refreshCompany: () => Promise<void>
 }
 
+// මෙන්න මෙතනට taxId එකතු කළා
 interface RegisterData {
   email: string
   password: string
   name: string
-  phone?: string
+  phone: string   // Backend එකේ @NotBlank නිසා අනිවාර්ය කළා
+  taxId: string   // මෙය අනිවාර්යයෙන්ම තිබිය යුතුයි
   address?: string
 }
 
@@ -57,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCompany(updatedCompany)
         localStorage.setItem("company", JSON.stringify(updatedCompany))
       } catch {
-        // If fetch fails, use stored data
         setCompany(companyData)
       }
     }
@@ -110,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: data.email,
       password: data.password,
       phone: data.phone,
+      taxId: data.taxId, // මෙතැනට දත්ත යැවීම දැන් සාර්ථක වේ
       address: data.address,
     })
     localStorage.setItem("token", response.token)

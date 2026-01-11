@@ -1,3 +1,5 @@
+"use client"
+
 import { api } from "./api"
 
 export interface LoginRequest {
@@ -13,15 +15,18 @@ export interface LoginResponse {
     email: string
     phone?: string
     address?: string
+    taxId: string; // මෙයද මෙහි ඇතුළත් කිරීම සුදුසුයි
     registrationDate?: string
   }
 }
 
+// මෙන්න මේ interface එකට taxId ඇතුළත් කරන්න
 export interface RegisterRequest {
   name: string
   email: string
   password: string
-  phone?: string
+  phone: string;  // Backend validation එකට ගැලපෙන්න ? ඉවත් කළා
+  taxId: string;  // අනිවාර්යයෙන්ම තිබිය යුතුයි (මෙය එකතු කරන්න)
   address?: string
 }
 
