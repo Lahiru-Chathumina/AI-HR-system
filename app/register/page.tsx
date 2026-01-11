@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/context/auth-context"
@@ -20,7 +19,9 @@ export default function RegisterPage() {
     confirmPassword: "",
     phone: "",
     address: "",
+    taxId: "",
   })
+
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { register } = useAuth()
@@ -43,6 +44,11 @@ export default function RegisterPage() {
       return
     }
 
+    if (!formData.taxId.trim()) {
+      setError("Tax ID is required")
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -52,6 +58,7 @@ export default function RegisterPage() {
         password: formData.password,
         phone: formData.phone || undefined,
         address: formData.address || undefined,
+        taxId: formData.taxId,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed")
@@ -62,7 +69,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-8">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
             <Building2 className="h-6 w-6 text-primary-foreground" />
@@ -98,6 +105,18 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="contact@company.com"
                 value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="taxId">Tax ID</Label>
+              <Input
+                id="taxId"
+                name="taxId"
+                placeholder="TAX1234567"
+                value={formData.taxId}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
