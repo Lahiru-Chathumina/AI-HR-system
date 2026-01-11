@@ -18,7 +18,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     phone: "",
-    address: "",
     taxId: "",
   })
 
@@ -34,13 +33,24 @@ export default function RegisterPage() {
     e.preventDefault()
     setError("")
 
+    // 1. Password Match Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
       return
     }
 
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters")
+    // 2. Backend Password Regex Validation
+    // Requires: 8+ chars, 1 Uppercase, 1 Number, 1 Special Char (@#$%^&+=)
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=]).{8,}$/
+    if (!passwordRegex.test(formData.password)) {
+      setError("Password must be at least 8 characters, contain an uppercase letter, a number, and a special character (@#$%^&+=)")
+      return
+    }
+
+    // 3. Backend Phone Regex Validation (Exactly 10 digits)
+    const phoneRegex = /^[0-9]{10}$/
+    if (!phoneRegex.test(formData.phone)) {
+      setError("Phone number must be exactly 10 digits (e.g., 0712345678)")
       return
     }
 
@@ -56,8 +66,7 @@ export default function RegisterPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        phone: formData.phone || undefined,
-        address: formData.address || undefined,
+        phone: formData.phone, // Backend requires @NotBlank
         taxId: formData.taxId,
       })
     } catch (err) {
@@ -123,25 +132,15 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone (Optional)</Label>
+              <Label htmlFor="phone">Phone Number (10 digits)</Label>
               <Input
                 id="phone"
                 name="phone"
                 type="tel"
-                placeholder="+1 234 567 890"
+                placeholder="0712345678"
                 value={formData.phone}
                 onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address (Optional)</Label>
-              <Input
-                id="address"
-                name="address"
-                placeholder="123 Business St, City"
-                value={formData.address}
-                onChange={handleChange}
+                required
                 disabled={isLoading}
               />
             </div>
@@ -157,6 +156,9 @@ export default function RegisterPage() {
                 required
                 disabled={isLoading}
               />
+              <p className="text-[10px] text-muted-foreground">
+                Must have 8+ chars, 1 uppercase, 1 number & 1 symbol.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
