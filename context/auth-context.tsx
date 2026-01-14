@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { authService, type LoginResponse } from "@/services/auth"
+import { authService } from "@/services/auth"
 import { companyService, type Company } from "@/services/company"
 
 interface User {
@@ -24,13 +24,12 @@ interface AuthContextType {
   refreshCompany: () => Promise<void>
 }
 
-// මෙන්න මෙතනට taxId එකතු කළා
 interface RegisterData {
   email: string
   password: string
   name: string
-  phone: string   // Backend එකේ @NotBlank නිසා අනිවාර්ය කළා
-  taxId: string   // මෙය අනිවාර්යයෙන්ම තිබිය යුතුයි
+  phone: string
+  taxId: string
   address?: string
 }
 
@@ -75,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setCompany(companyData)
           setUser({
             id: companyData.id,
-            email: companyData.email,
+            email: companyData.email || "",
             name: companyData.name,
             companyId: companyData.id,
             companyName: companyData.name,
@@ -91,39 +90,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const response: LoginResponse = await authService.login({ email, password })
+    // Backend AuthController එකට අනුව response එක ගන්නේ මෙහෙමයි
+    const response: any = await authService.login({ email, password })
+
+    // Backend එකෙන් එන companyId සහ name අරන් Company object එකක් හදනවා
+    const companyObj: Company = {
+      id: response.companyId, // මෙතනයි වැරදිලා තිබ්බේ
+      name: response.name,
+      email: email, // Login කරන email එකම මෙතනට දානවා
+    }
+
     localStorage.setItem("token", response.token)
-    localStorage.setItem("company", JSON.stringify(response.company))
-    setCompany(response.company)
+    localStorage.setItem("company", JSON.stringify(companyObj))
+    
+    setCompany(companyObj)
     setUser({
-      id: response.company.id,
-      email: response.company.email,
-      name: response.company.name,
-      companyId: response.company.id,
-      companyName: response.company.name,
+      id: companyObj.id,
+      email: email,
+      name: companyObj.name,
+      companyId: companyObj.id,
+      companyName: companyObj.name,
     })
+    
     router.push("/dashboard")
   }
 
   const register = async (data: RegisterData) => {
-    const response: LoginResponse = await authService.register({
+    const response: any = await authService.register({
       name: data.name,
       email: data.email,
       password: data.password,
       phone: data.phone,
-      taxId: data.taxId, // මෙතැනට දත්ත යැවීම දැන් සාර්ථක වේ
+      taxId: data.taxId,
       address: data.address,
     })
+
+    const companyObj: Company = {
+      id: response.companyId,
+      name: response.name,
+      email: data.email,
+    }
+
     localStorage.setItem("token", response.token)
-    localStorage.setItem("company", JSON.stringify(response.company))
-    setCompany(response.company)
+    localStorage.setItem("company", JSON.stringify(companyObj))
+    
+    setCompany(companyObj)
     setUser({
-      id: response.company.id,
-      email: response.company.email,
-      name: response.company.name,
-      companyId: response.company.id,
-      companyName: response.company.name,
+      id: companyObj.id,
+      email: data.email,
+      name: companyObj.name,
+      companyId: companyObj.id,
+      companyName: companyObj.name,
     })
+    
     router.push("/dashboard")
   }
 
