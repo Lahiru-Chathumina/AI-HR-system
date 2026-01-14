@@ -11,21 +11,42 @@ class ApiError extends Error {
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
+  // 1. කලින්ම response body එක text එකක් විදියට ගන්නවා (Parse කරන්න කලින්)
+  const text = await response.text();
+
   if (!response.ok) {
+    // 401 Unauthorized නම් login එකට යවනවා
     if (response.status === 401) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("company")
-      window.location.href = "/login"
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token")
+        localStorage.removeItem("company")
+        window.location.href = "/login"
+      }
       throw new ApiError(401, "Unauthorized")
     }
 
-    const error = await response.json().catch(() => ({ message: "An error occurred" }))
-    throw new ApiError(response.status, error.message || "An error occurred")
+    // Error එක JSON ද නැත්නම් ප්ලේන් Text එකක්ද කියලා බලනවා
+    let errorMessage = "An error occurred";
+    try {
+      const errorJson = JSON.parse(text);
+      errorMessage = errorJson.message || errorMessage;
+    } catch {
+      errorMessage = text || errorMessage;
+    }
+    throw new ApiError(response.status, errorMessage)
   }
 
-  const text = await response.text()
+  // Response එකේ body එකක් නැත්නම් හිස් object එකක් දෙනවා
   if (!text) return {} as T
-  return JSON.parse(text)
+
+  // 2. මෙතනදී Backend එකෙන් එවන "Customer added successfully." වගේ ඒවා
+  // JSON parse කරන්න ගියොත් හැලෙන නිසා try-catch එකක් දානවා
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    // JSON නෙවෙයි නම් කෙලින්ම text එකම යවනවා
+    return text as unknown as T;
+  }
 }
 
 function getHeaders(): HeadersInit {

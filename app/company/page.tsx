@@ -1,17 +1,6 @@
 "use client"
 
-import { SelectItem } from "@/components/ui/select"
-
-import { SelectContent } from "@/components/ui/select"
-
-import { SelectValue } from "@/components/ui/select"
-
-import { SelectTrigger } from "@/components/ui/select"
-
-import { Select } from "@/components/ui/select"
-
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { useAuth } from "@/context/auth-context"
@@ -22,6 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, AlertCircle, CheckCircle2, Building2 } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const industrySizes = ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"]
 const industries = [
@@ -86,10 +82,19 @@ export default function CompanyProfilePage() {
     setIsSaving(true)
 
     try {
-      const updated = await companyService.updateCompany(company.id, formData)
-      setCompany(updated)
+      // Backend එකෙන් එන string message එක (Customer updated successfully.) කෙලින්ම res එකට එනවා
+      const res = await companyService.updateCompany(company.id, formData)
+      
+      // Auth context එක අලුත් කරනවා
       await refreshCompany()
-      setSuccess("Company profile updated successfully")
+      
+      // Backend message එක පෙන්වනවා. string එකක් නෙවෙයි නම් default එකක් දානවා.
+      const displayMsg = typeof res === "string" ? res : "Company profile updated successfully"
+      setSuccess(displayMsg)
+
+      // තත්පර 5කින් පණිවිඩය අයින් කරනවා
+      setTimeout(() => setSuccess(""), 5000)
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update company")
     } finally {
@@ -110,7 +115,6 @@ export default function CompanyProfilePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Company Profile</h1>
           <p className="text-muted-foreground">Manage your company information and settings</p>
@@ -259,7 +263,6 @@ export default function CompanyProfilePage() {
             </Card>
           </div>
 
-          {/* Save Button */}
           <div className="mt-6 flex justify-end">
             <Button type="submit" disabled={isSaving} className="min-w-[120px]">
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
