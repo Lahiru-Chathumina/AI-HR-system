@@ -19,22 +19,23 @@ export interface CreateEmployeeData {
 }
 
 export const employeeService = {
-  // සේවා ස්ථානය අනුව සේවකයින් ලබා ගැනීම
+  // Backend එකේ /company/{id} නැති නිසා සියල්ල ගෙන filter කරමු
   async getEmployeesByCompany(companyId: number): Promise<Employee[]> {
-    return api.get<Employee[]>(`/api/v1/employees/company/${companyId}`)
+    try {
+      const allEmployees = await api.get<Employee[]>("/api/v1/employees")
+      // සේවකයාගේ company object එකේ id එක අපේ company id එකට සමාන අය පමණක් ගනී
+      return allEmployees.filter(emp => emp.company?.id === companyId)
+    } catch (error) {
+      console.error("Error filtering employees:", error)
+      return []
+    }
   },
 
-  // අලුත් සේවකයෙකු ඇතුළත් කිරීම (POST)
+  // Backend @PostMapping("/api/v1/employees") ට අනුව
   async createEmployee(data: CreateEmployeeData): Promise<Employee> {
     return api.post<Employee>("/api/v1/employees", data)
   },
 
-  // සේවකයෙකුගේ විස්තර වෙනස් කිරීම (PUT)
-  async updateEmployee(id: number, data: Partial<CreateEmployeeData>): Promise<Employee> {
-    return api.put<Employee>(`/api/v1/employees/${id}`, data)
-  },
-
-  // සේවකයෙකු අයින් කිරීම (DELETE)
   async deleteEmployee(id: number): Promise<void> {
     return api.delete(`/api/v1/employees/${id}`)
   }

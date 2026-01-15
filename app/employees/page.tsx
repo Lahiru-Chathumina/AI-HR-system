@@ -5,8 +5,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { useAuth } from "@/context/auth-context"
 import { employeeService, type Employee } from "@/services/employee"
 import { 
-  Plus, Search, Loader2, DollarSign, Briefcase, 
-  Trash2, Edit, MoreVertical 
+  Plus, Search, Loader2, DollarSign, Briefcase, Trash2 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +26,6 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isOpen, setIsOpen] = useState(false)
 
-  // Form State
   const [formData, setFormData] = useState({ name: "", position: "", salary: "" })
 
   const loadEmployees = async () => {
@@ -37,7 +35,7 @@ export default function EmployeesPage() {
       const data = await employeeService.getEmployeesByCompany(company.id)
       setEmployees(data)
     } catch (error) {
-      console.error("Failed to load employees", error)
+      console.error("Load failed", error)
     } finally {
       setIsLoading(false)
     }
@@ -60,22 +58,15 @@ export default function EmployeesPage() {
       setFormData({ name: "", position: "", salary: "" })
       loadEmployees()
     } catch (error) {
-      alert("Error adding employee")
+      alert("Error adding employee. Check if backend is running.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete?")) {
-      await employeeService.deleteEmployee(id)
-      loadEmployees()
-    }
-  }
-
   const filtered = employees.filter(emp => 
-    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.position.toLowerCase().includes(searchTerm.toLowerCase())
+    emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.position?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -86,14 +77,17 @@ export default function EmployeesPage() {
           
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-indigo-600">
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
                 <Plus className="mr-2 h-4 w-4" /> Add Member
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]">
               <form onSubmit={handleCreate}>
                 <DialogHeader>
                   <DialogTitle>Add New Employee</DialogTitle>
+                  <DialogDescription>
+                    Provide employee's full name, position and monthly salary to register.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
@@ -105,13 +99,13 @@ export default function EmployeesPage() {
                     <Input required value={formData.position} onChange={(e) => setFormData({...formData, position: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Monthly Salary</Label>
+                    <Label>Salary ($)</Label>
                     <Input type="number" required value={formData.salary} onChange={(e) => setFormData({...formData, salary: e.target.value})} />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting} className="w-full">
-                    {isSubmitting ? "Saving..." : "Save Member"}
+                    {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Save Employee"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -130,25 +124,23 @@ export default function EmployeesPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Position</TableHead>
-                <TableHead>Salary</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-right">Salary</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-10"><Loader2 className="animate-spin inline mr-2" /> Loading...</TableCell></TableRow>
-              ) : filtered.map((emp) => (
-                <TableRow key={emp.id}>
-                  <TableCell className="font-medium">{emp.name}</TableCell>
-                  <TableCell>{emp.position}</TableCell>
-                  <TableCell className="text-emerald-600 font-bold">${emp.salary.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(emp.id)} className="text-rose-500">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                <TableRow><TableCell colSpan={3} className="text-center py-10"><Loader2 className="animate-spin inline-block" /></TableCell></TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={3} className="text-center py-10">No employees found.</TableCell></TableRow>
+              ) : (
+                filtered.map((emp) => (
+                  <TableRow key={emp.id}>
+                    <TableCell className="font-medium">{emp.name}</TableCell>
+                    <TableCell>{emp.position}</TableCell>
+                    <TableCell className="text-right font-bold text-emerald-600">${emp.salary.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
