@@ -13,10 +13,9 @@ import {
   CalendarDays,
   DollarSign,
   ClipboardCheck,
-} from "lucide-react"
+} from "lucide-react" // නිවැරදි කරන ලදී
 import { Button } from "@/components/ui/button"
 
-// 1. TypeScript සඳහා Props interface එකක් එකතු කරන්න
 interface SidebarProps {
   className?: string;
 }
@@ -30,14 +29,12 @@ const navItems = [
   { label: "Company Profile", href: "/company", icon: Building2 },
 ]
 
-// 2. className prop එක මෙතනට ලබාගන්න
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
 
   return (
-    // 3. h-screen වෙනුවට h-full පාවිච්චි කරන්න, පිටතින් එන className එක cn() එකට දාන්න
-    <aside className={cn("flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar", className)}>
+    <aside className={cn("flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar min-h-0", className)}>
       {/* Logo Section */}
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6 flex-shrink-0">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
@@ -56,8 +53,8 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       )}
 
-      {/* Navigation - overflow-y-auto දාන්න මෙනු එක ගොඩක් වැඩි වුනොත් scroll වෙන්න */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+      {/* Navigation - Scrollable area */}
+      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto min-h-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -78,8 +75,8 @@ export function Sidebar({ className }: SidebarProps) {
         })}
       </nav>
 
-      {/* User Section */}
-      <div className="border-t border-sidebar-border p-4 flex-shrink-0">
+      {/* User Section - Pushed to bottom */}
+      <div className="mt-auto border-t border-sidebar-border p-4 flex-shrink-0">
         <div className="mb-3 flex items-center gap-3 px-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sm font-medium text-sidebar-accent-foreground">
             {user?.name?.charAt(0).toUpperCase()}
