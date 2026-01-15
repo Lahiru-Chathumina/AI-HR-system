@@ -8,7 +8,7 @@ export interface Employee {
   company?: {
     id: number
     name: string
-  }
+  } | null // null විය හැකි බව සඳහන් කරන්න
 }
 
 export interface CreateEmployeeData {
@@ -19,19 +19,26 @@ export interface CreateEmployeeData {
 }
 
 export const employeeService = {
-  // Backend එකේ /company/{id} නැති නිසා සියල්ල ගෙන filter කරමු
+  // සේවා ස්ථානය අනුව සේවකයින් ලබා ගැනීම
   async getEmployeesByCompany(companyId: number): Promise<Employee[]> {
     try {
+      // සියලුම සේවකයින් API එකෙන් ලබා ගනී
       const allEmployees = await api.get<Employee[]>("/api/v1/employees")
-      // සේවකයාගේ company object එකේ id එක අපේ company id එකට සමාන අය පමණක් ගනී
-      return allEmployees.filter(emp => emp.company?.id === companyId)
+      
+      // Backend එකේ company null නිසා තාවකාලිකව filter එක අයින් කරන්න
+      // එවිට Swagger එකේ පේන සේවකයෝ ඔක්කොම මෙතනත් පේනවා
+      console.log("Fetched Employees:", allEmployees);
+      return allEmployees;
+      
+      /* Backend එකේ companyId එක හරිගැස්සුවාට පස්සේ මේ පේළිය පාවිච්චි කරන්න:
+      return allEmployees.filter(emp => emp.company?.id === companyId) 
+      */
     } catch (error) {
-      console.error("Error filtering employees:", error)
+      console.error("Error fetching employees:", error)
       return []
     }
   },
 
-  // Backend @PostMapping("/api/v1/employees") ට අනුව
   async createEmployee(data: CreateEmployeeData): Promise<Employee> {
     return api.post<Employee>("/api/v1/employees", data)
   },
