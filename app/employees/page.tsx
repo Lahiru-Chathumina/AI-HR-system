@@ -3,21 +3,21 @@
 import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { useAuth } from "@/context/auth-context"
-import { employeeService, type Employee, type CreateEmployeeData } from "@/services/employee"
+import { employeeService, type Employee } from "@/services/employee"
 import { 
-  Plus, Search, MoreVertical, Loader2, 
-  Briefcase, DollarSign, Trash2, UserPlus 
+  Plus, Search, Loader2, DollarSign, Briefcase, 
+  Trash2, Edit, MoreVertical 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table"
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
-} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table"
 
 export default function EmployeesPage() {
   const { company } = useAuth()
@@ -25,50 +25,51 @@ export default function EmployeesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
-  const [open, setOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   // Form State
-  const [newEmployee, setNewEmployee] = useState({
-    name: "",
-    position: "",
-    salary: ""
-  })
+  const [formData, setFormData] = useState({ name: "", position: "", salary: "" })
 
   const loadEmployees = async () => {
     if (!company?.id) return
+    setIsLoading(true)
     try {
       const data = await employeeService.getEmployeesByCompany(company.id)
       setEmployees(data)
     } catch (error) {
-      console.error("Failed to load:", error)
+      console.error("Failed to load employees", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  useEffect(() => {
-    loadEmployees()
-  }, [company?.id])
+  useEffect(() => { loadEmployees() }, [company?.id])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!company?.id) return
-    
     setIsSubmitting(true)
     try {
       await employeeService.createEmployee({
-        name: newEmployee.name,
-        position: newEmployee.position,
-        salary: Number(newEmployee.salary),
+        name: formData.name,
+        position: formData.position,
+        salary: Number(formData.salary),
         companyId: company.id
       })
-      setOpen(false) // Dialog එක වහන්න
-      setNewEmployee({ name: "", position: "", salary: "" }) // Form එක reset කරන්න
-      loadEmployees() // List එක refresh කරන්න
+      setIsOpen(false)
+      setFormData({ name: "", position: "", salary: "" })
+      loadEmployees()
     } catch (error) {
-      alert("Failed to create employee. Please check backend.")
+      alert("Error adding employee")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Are you sure you want to delete?")) {
+      await employeeService.deleteEmployee(id)
+      loadEmployees()
     }
   }
 
@@ -80,52 +81,37 @@ export default function EmployeesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-3xl font-bold">Employee Management</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl sm:text-3xl font-bold">Employees</h1>
           
-          {/* Create Employee Dialog */}
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="mr-2 h-4 w-4" /> Add Employee
+              <Button className="bg-indigo-600">
+                <Plus className="mr-2 h-4 w-4" /> Add Member
               </Button>
             </DialogTrigger>
             <DialogContent>
               <form onSubmit={handleCreate}>
                 <DialogHeader>
                   <DialogTitle>Add New Employee</DialogTitle>
-                  <DialogDescription>Fill in the details to register a new member.</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
                     <Label>Full Name</Label>
-                    <Input 
-                      required 
-                      value={newEmployee.name}
-                      onChange={e => setNewEmployee({...newEmployee, name: e.target.value})}
-                    />
+                    <Input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   </div>
                   <div className="space-y-2">
                     <Label>Position</Label>
-                    <Input 
-                      required 
-                      value={newEmployee.position}
-                      onChange={e => setNewEmployee({...newEmployee, position: e.target.value})}
-                    />
+                    <Input required value={formData.position} onChange={(e) => setFormData({...formData, position: e.target.value})} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Salary</Label>
-                    <Input 
-                      type="number" 
-                      required 
-                      value={newEmployee.salary}
-                      onChange={e => setNewEmployee({...newEmployee, salary: e.target.value})}
-                    />
+                    <Label>Monthly Salary</Label>
+                    <Input type="number" required value={formData.salary} onChange={(e) => setFormData({...formData, salary: e.target.value})} />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting} className="w-full">
-                    {isSubmitting ? "Saving..." : "Save Employee"}
+                    {isSubmitting ? "Saving..." : "Save Member"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -133,42 +119,39 @@ export default function EmployeesPage() {
           </Dialog>
         </div>
 
-        {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Search by name or position..." 
-            className="pl-10"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
+          <Input placeholder="Search..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        {/* List View */}
-        {isLoading ? (
-          <div className="flex justify-center py-10"><Loader2 className="animate-spin" /></div>
-        ) : (
-          <div className="border rounded-lg bg-white dark:bg-slate-900">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Salary</TableHead>
+        <div className="rounded-xl border bg-white dark:bg-slate-900 shadow-sm overflow-hidden overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-slate-50 dark:bg-slate-800">
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Position</TableHead>
+                <TableHead>Salary</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={4} className="text-center py-10"><Loader2 className="animate-spin inline mr-2" /> Loading...</TableCell></TableRow>
+              ) : filtered.map((emp) => (
+                <TableRow key={emp.id}>
+                  <TableCell className="font-medium">{emp.name}</TableCell>
+                  <TableCell>{emp.position}</TableCell>
+                  <TableCell className="text-emerald-600 font-bold">${emp.salary.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(emp.id)} className="text-rose-500">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map(emp => (
-                  <TableRow key={emp.id}>
-                    <TableCell className="font-medium">{emp.name}</TableCell>
-                    <TableCell>{emp.position}</TableCell>
-                    <TableCell className="text-green-600 font-bold">${emp.salary.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </DashboardLayout>
   )
