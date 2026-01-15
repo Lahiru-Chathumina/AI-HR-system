@@ -13,7 +13,7 @@ import {
   CalendarDays,
   DollarSign,
   ClipboardCheck,
-} from "lucide-react" // නිවැරදි කරන ලදී
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
@@ -53,7 +53,7 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
       )}
 
-      {/* Navigation - Scrollable area */}
+      {/* Navigation - මැද කොටස scroll වේ */}
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto min-h-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href
@@ -75,8 +75,8 @@ export function Sidebar({ className }: SidebarProps) {
         })}
       </nav>
 
-      {/* User Section - Pushed to bottom */}
-      <div className="mt-auto border-t border-sidebar-border p-4 flex-shrink-0">
+      {/* User Section - Logout එක ඇතුළුව පහළටම සීමා වේ */}
+      <div className="mt-auto border-t border-sidebar-border p-4 flex-shrink-0 bg-sidebar">
         <div className="mb-3 flex items-center gap-3 px-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sm font-medium text-sidebar-accent-foreground">
             {user?.name?.charAt(0).toUpperCase()}
