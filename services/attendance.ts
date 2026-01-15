@@ -2,45 +2,33 @@ import { api } from "./api"
 
 export interface Attendance {
   id: number
-  employeeId: number
+  employeeName: string
   date: string
-  checkIn?: string
-  checkOut?: string
-  status?: string
-  notes?: string
+  clockIn: string
+  clockOut: string | null
+  status: "Present" | "Absent" | "Late"
+  workHours: number | null
 }
 
-export interface CreateAttendanceData {
+export interface MarkAttendanceData {
   employeeId: number
-  date: string
-  checkIn?: string
-  checkOut?: string
-  status?: string
-  notes?: string
+  status: string
+  clockIn: string
 }
 
 export const attendanceService = {
-  async getAllAttendances(): Promise<Attendance[]> {
-    return api.get<Attendance[]>("/api/attendances")
+  // සියලුම පැමිණීමේ වාර්තා ලබා ගැනීම
+  async getAllAttendance(): Promise<Attendance[]> {
+    return api.get<Attendance[]>("/api/v1/attendance")
   },
 
-  async getAttendance(id: number): Promise<Attendance> {
-    return api.get<Attendance>(`/api/attendances/${id}`)
+  // සමාගමට අනුව පැමිණීමේ වාර්තා ලබා ගැනීම
+  async getAttendanceByCompany(companyId: number): Promise<Attendance[]> {
+    return api.get<Attendance[]>(`/api/v1/attendance/company/${companyId}`)
   },
 
-  async getAttendancesByEmployee(employeeId: number): Promise<Attendance[]> {
-    return api.get<Attendance[]>(`/api/attendances/employee/${employeeId}`)
-  },
-
-  async createAttendance(data: CreateAttendanceData): Promise<Attendance> {
-    return api.post<Attendance>("/api/attendances/add", data)
-  },
-
-  async updateAttendance(id: number, data: Partial<CreateAttendanceData>): Promise<Attendance> {
-    return api.put<Attendance>(`/api/attendances/update/${id}`, data)
-  },
-
-  async deleteAttendance(id: number): Promise<void> {
-    return api.delete(`/api/attendances/${id}`)
-  },
+  // පැමිණීම සටහන් කිරීම
+  async markAttendance(data: MarkAttendanceData): Promise<Attendance> {
+    return api.post<Attendance>("/api/v1/attendance", data)
+  }
 }
