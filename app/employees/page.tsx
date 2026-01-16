@@ -6,7 +6,7 @@ import { useAuth } from "@/context/auth-context"
 import { employeeService, type Employee } from "@/services/employee"
 import { 
   Plus, Search, Loader2, Trash2, UserMinus, AlertCircle
-} from "lucide-material" // Note: standard is lucide-react
+} from "lucide-react" // Note: standard is lucide-react
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
