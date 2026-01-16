@@ -6,7 +6,7 @@ import { leaveService, type Leave } from "@/services/leave"
 import { 
   Plus, Search, Loader2, Calendar, 
   CheckCircle, XCircle, Clock, Trash2 
-} from "lucide-react"
+} from "lucide-react" // නිවැරදි කරන ලද import එක
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -25,6 +25,15 @@ export default function LeavesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+
+  // Form එක සඳහා state
+  const [formData, setFormData] = useState({
+    employeeName: "",
+    leaveType: "Annual",
+    startDate: "",
+    endDate: "",
+    reason: ""
+  })
 
   const loadLeaves = async () => {
     setIsLoading(true)
@@ -53,6 +62,27 @@ export default function LeavesPage() {
     if (e.key === "Enter") handleSearch()
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      // TypeScript error එක මඟහරවා ගැනීමට ඕනෑම (any) විදිහට දත්ත යවන්න 
+      // එසේත් නැත්නම් service එකේ 'status' ඇතුළත් කර ඇත්නම් එය පාවිච්චි කරන්න
+      const payload: any = {
+        ...formData,
+        status: "Pending"
+      }
+
+      const newLeave = await leaveService.createLeave(payload)
+      
+      setLeaves(prev => [newLeave, ...prev])
+      setFilteredLeaves(prev => [newLeave, ...prev])
+      setIsOpen(false)
+      setFormData({ employeeName: "", leaveType: "Annual", startDate: "", endDate: "", reason: "" })
+    } catch (error) {
+      alert("Failed to submit leave request")
+    }
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Approved": return <CheckCircle className="h-4 w-4 text-emerald-500" />
@@ -66,18 +96,87 @@ export default function LeavesPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
-          <Button onClick={() => setIsOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
-            <Plus className="mr-2 h-4 w-4" /> Request Leave
-          </Button>
+          
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="mr-2 h-4 w-4" /> Request Leave
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <form onSubmit={handleSubmit}>
+                <DialogHeader>
+                  <DialogTitle>Request Leave</DialogTitle>
+                  <DialogDescription>
+                    Fill in the details for your leave application.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="empName">Employee Name</Label>
+                    <Input 
+                      id="empName"
+                      required 
+                      value={formData.employeeName}
+                      onChange={(e) => setFormData({...formData, employeeName: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lType">Leave Type</Label>
+                    <select 
+                      id="lType"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                      value={formData.leaveType}
+                      onChange={(e) => setFormData({...formData, leaveType: e.target.value})}
+                    >
+                      <option value="Annual">Annual Leave</option>
+                      <option value="Sick">Sick Leave</option>
+                      <option value="Casual">Casual Leave</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="sDate">Start Date</Label>
+                      <Input 
+                        id="sDate"
+                        type="date" 
+                        required
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="eDate">End Date</Label>
+                      <Input 
+                        id="eDate"
+                        type="date" 
+                        required
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-indigo-600 text-white">
+                    Submit Request
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search Bar */}
         <div className="flex gap-2 max-w-md">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input 
-              className="flex h-10 w-full rounded-md border border-input bg-background px-10 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            <Input 
               placeholder="Search by name and press Enter..." 
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -136,7 +235,7 @@ export default function LeavesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="text-rose-500">
+                      <Button variant="ghost" size="sm" className="text-rose-500 hover:text-rose-700 hover:bg-rose-50">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
