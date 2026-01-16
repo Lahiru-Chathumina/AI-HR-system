@@ -26,6 +26,15 @@ export default function PayrollPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isOpen, setIsOpen] = useState(false)
 
+  // අලුත් Payroll එකක් සඳහා Form State
+  const [formData, setFormData] = useState({
+    employeeId: "",
+    month: new Date().toLocaleString('default', { month: 'long' }),
+    year: new Date().getFullYear().toString(),
+    basicSalary: "",
+    deductions: "0"
+  })
+
   const loadPayrolls = async () => {
     setIsLoading(true)
     try {
@@ -53,6 +62,41 @@ export default function PayrollPage() {
     if (e.key === "Enter") handleSearch()
   }
 
+  // Payroll එක Process කරන Function එක
+  const handleProcessPayroll = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const basic = parseFloat(formData.basicSalary)
+      const ded = parseFloat(formData.deductions)
+      
+      const payload: any = {
+        employeeId: parseInt(formData.employeeId),
+        month: formData.month,
+        year: parseInt(formData.year),
+        basicSalary: basic,
+        deductions: ded,
+        netSalary: basic - ded,
+        status: "Pending" // ආරම්භයේදී status එක Pending ලෙස
+      }
+
+      const newPayroll = await payrollService.createPayroll(payload)
+      setPayrolls(prev => [newPayroll, ...prev])
+      setFilteredPayrolls(prev => [newPayroll, ...prev])
+      setIsOpen(false)
+      
+      // Form එක Reset කිරීම
+      setFormData({
+        employeeId: "",
+        month: new Date().toLocaleString('default', { month: 'long' }),
+        year: new Date().getFullYear().toString(),
+        basicSalary: "",
+        deductions: "0"
+      })
+    } catch (error) {
+      alert("Failed to process payroll. Please check employee ID.")
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -62,9 +106,73 @@ export default function PayrollPage() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Payroll Management</h1>
             <p className="text-sm text-slate-500">Generate and manage employee monthly salaries.</p>
           </div>
-          <Button onClick={() => setIsOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 shadow-md">
-            <Plus className="mr-2 h-4 w-4" /> Process Payroll
-          </Button>
+
+          {/* DIALOG START */}
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-md">
+                <Plus className="mr-2 h-4 w-4" /> Process Payroll
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <form onSubmit={handleProcessPayroll}>
+                <DialogHeader>
+                  <DialogTitle>Process New Payroll</DialogTitle>
+                  <DialogDescription>
+                    Enter salary details for the employee.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Employee ID</Label>
+                      <Input 
+                        type="number" 
+                        required 
+                        placeholder="e.g. 101"
+                        value={formData.employeeId}
+                        onChange={(e) => setFormData({...formData, employeeId: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Month</Label>
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={formData.month}
+                        onChange={(e) => setFormData({...formData, month: e.target.value})}
+                      >
+                        {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Basic Salary ($)</Label>
+                    <Input 
+                      type="number" 
+                      required 
+                      value={formData.basicSalary}
+                      onChange={(e) => setFormData({...formData, basicSalary: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Deductions ($)</Label>
+                    <Input 
+                      type="number" 
+                      value={formData.deductions}
+                      onChange={(e) => setFormData({...formData, deductions: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-indigo-600">Generate Payroll</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+          {/* DIALOG END */}
         </div>
 
         {/* Search Bar */}
