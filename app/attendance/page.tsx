@@ -13,6 +13,11 @@ import { Input } from "@/components/ui/input"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter,
+  DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
 export default function AttendancePage() {
@@ -21,12 +26,19 @@ export default function AttendancePage() {
   const [filteredData, setFilteredData] = useState<Attendance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  
+  // New States for Dialog
+  const [isLogOpen, setIsLogOpen] = useState(false)
+  const [newLog, setNewLog] = useState({
+    employeeName: "",
+    status: "Present",
+    clockIn: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  })
 
   const loadAttendance = async () => {
     if (!company?.id) return
     setIsLoading(true)
     try {
-      // Backend එකේ සමාගම අනුව සෙවීමේ පහසුකම තිබේ නම්:
       const data = await attendanceService.getAttendanceByCompany(company.id)
       setAttendance(data)
       setFilteredData(data)
@@ -51,6 +63,27 @@ export default function AttendancePage() {
     if (e.key === "Enter") handleSearch()
   }
 
+  // Attendance Log Function
+  const handleLogAttendance = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!company?.id) return
+
+    try {
+      const entry = await attendanceService.logAttendance({
+        ...newLog,
+        companyId: company.id,
+        date: new Date().toISOString().split('T')[0] // Today's date
+      })
+      
+      setAttendance(prev => [entry, ...prev])
+      setFilteredData(prev => [entry, ...prev])
+      setIsLogOpen(false)
+      setNewLog({ employeeName: "", status: "Present", clockIn: "" })
+    } catch (error) {
+      alert("Failed to log attendance.")
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -59,9 +92,60 @@ export default function AttendancePage() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Attendance</h1>
             <p className="text-sm text-slate-500">Track and manage employee daily presence.</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
-            <UserCheck className="mr-2 h-4 w-4" /> Log Today's Attendance
-          </Button>
+
+          {/* LOG ATTENDANCE DIALOG */}
+          <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto">
+                <UserCheck className="mr-2 h-4 w-4" /> Log Today's Attendance
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <form onSubmit={handleLogAttendance}>
+                <DialogHeader>
+                  <DialogTitle>Manual Attendance Entry</DialogTitle>
+                  <DialogDescription>Record clock-in time for an employee.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Employee Name</Label>
+                    <Input 
+                      required 
+                      value={newLog.employeeName}
+                      onChange={(e) => setNewLog({...newLog, employeeName: e.target.value})}
+                      placeholder="e.g. John Doe" 
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Clock In Time</Label>
+                      <Input 
+                        type="time" 
+                        value={newLog.clockIn}
+                        onChange={(e) => setNewLog({...newLog, clockIn: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        value={newLog.status}
+                        onChange={(e) => setNewLog({...newLog, status: e.target.value})}
+                      >
+                        <option value="Present">Present</option>
+                        <option value="Late">Late</option>
+                        <option value="Absent">Absent</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsLogOpen(false)}>Cancel</Button>
+                  <Button type="submit" className="bg-indigo-600">Save Record</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search Bar */}
@@ -102,7 +186,7 @@ export default function AttendancePage() {
               ) : filteredData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 text-slate-500">
-                    No attendance records found for today.
+                    No attendance records found.
                   </TableCell>
                 </TableRow>
               ) : (
