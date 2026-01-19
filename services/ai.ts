@@ -11,28 +11,39 @@ export interface AiResponse {
 }
 
 export const aiService = {
-  // AI 
+  /**
+   * Sends a general HR or data-related question to the AI.
+   * The backend uses RAG to answer based on your database.
+   */
   async ask(question: string): Promise<string> {
-    // Backend  String 
-    return api.post<string>("/api/ai/ask", { question });
+    // Note: Ensure your axios/api instance is configured to handle string responses
+    return api.post("/api/ai/ask", { question });
   },
 
-  // CV එකක් upload  (AI Resume Parser)
+  /**
+   * Uploads a PDF CV to the AI Resume Parser.
+   * Uses multipart/form-data to send the file to Spring Boot.
+   */
   async processCv(file: File): Promise<AiResponse> {
     const formData = new FormData();
-    formData.append("file", file);
-    
-    // fetch  FormData 
+    formData.append("file", file); // Key must match @RequestParam("file") in Java
+
     const token = localStorage.getItem("token");
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://drop-pick-production.up.railway.app"}/api/ai/process-cv`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://drop-pick-production.up.railway.app";
+
+    const response = await fetch(`${baseUrl}/api/ai/process-cv`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`
       },
       body: formData,
     });
-    
-    if (!response.ok) throw new Error("Failed to process CV");
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(errorData || "Failed to process CV");
+    }
+
     return response.json();
   }
 };
