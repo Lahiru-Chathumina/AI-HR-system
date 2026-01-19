@@ -17,7 +17,8 @@ export const aiService = {
    */
   async ask(question: string): Promise<string> {
     // Note: Ensure your axios/api instance is configured to handle string responses
-    return api.post("/api/ai/ask", { question });
+    const response = await api.post("/api/ai/ask", { question });
+    return typeof response === 'string' ? response : response.data;
   },
 
   /**
