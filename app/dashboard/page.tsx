@@ -228,7 +228,7 @@ export default function DashboardPage() {
                     <CardTitle className="text-2xl font-bold bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">HR Intelligence Assistant</CardTitle>
                     <p className="text-sm text-indigo-300 flex items-center gap-2 mt-1">
                       <span className="h-2 w-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50" />
-                      Neural Link Active • {employees.length} Records
+                       • {employees.length} 
                     </p>
                   </div>
                 </div>
