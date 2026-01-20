@@ -17,27 +17,32 @@ export default function AttendancePage() {
   const [isLogOpen, setIsLogOpen] = useState(false)
   const [newLog, setNewLog] = useState({ employeeId: "", status: "Present", clockIn: "08:30" })
 
-  // Data Load කිරීම
+  // Data Load කිරීමේ ක්‍රියාවලිය
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true);
+      
+      // 1. මුලින්ම Employees Load කරගන්න (Dropdown එක සඳහා)
       try {
-        setIsLoading(true);
-        const [attData, empData] = await Promise.all([
-          attendanceService.getAllAttendance(),
-          employeeService.getAllEmployees()
-        ]);
-        
-        // Array එකක් බව තහවුරු කරගෙන Data set කිරීම
-        setAttendance(Array.isArray(attData) ? attData : []);
+        const empData = await employeeService.getAllEmployees();
         setEmployees(Array.isArray(empData) ? empData : []);
-        
-        console.log("Employees loaded:", empData);
+        console.log("Employees loaded successfully");
       } catch (e) {
-        console.error("Failed to load data", e);
+        console.error("Failed to load employees:", e);
+      }
+
+      // 2. ඉන්පසු Attendance Load කරගන්න
+      try {
+        const attData = await attendanceService.getAllAttendance();
+        setAttendance(Array.isArray(attData) ? attData : []);
+      } catch (e) {
+        console.error("Failed to load attendance records:", e);
+        // මෙහිදී Error එකක් ආවත් Employees ටික dropdown එකේ පෙන්වයි
       } finally {
         setIsLoading(false);
       }
     };
+
     loadData();
   }, [])
 
@@ -52,7 +57,6 @@ export default function AttendancePage() {
         clockIn: newLog.clockIn
       });
       
-      // අලුත් දත්තය Table එකට එකතු කිරීම
       setAttendance(prev => [entry, ...prev]);
       setIsLogOpen(false);
       setNewLog({ employeeId: "", status: "Present", clockIn: "08:30" });
@@ -63,7 +67,6 @@ export default function AttendancePage() {
     }
   };
 
-  // Stats ගණනය කිරීම
   const todayPresent = attendance.filter(a => a.status === "Present").length
   const todayLate = attendance.filter(a => a.status === "Late").length
   const todayAbsent = attendance.filter(a => a.status === "Absent").length
@@ -100,11 +103,15 @@ export default function AttendancePage() {
                       onChange={(e) => setNewLog({...newLog, employeeId: e.target.value})}
                     >
                       <option value="" className="bg-slate-900 text-white">Choose an employee...</option>
-                      {employees.map(emp => (
-                        <option key={emp.id} value={emp.id} className="bg-slate-900 text-white">
-                          {emp.name}
-                        </option>
-                      ))}
+                      {employees.length > 0 ? (
+                        employees.map(emp => (
+                          <option key={emp.id} value={emp.id} className="bg-slate-900 text-white">
+                            {emp.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled className="text-slate-500">Loading employees...</option>
+                      )}
                     </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
