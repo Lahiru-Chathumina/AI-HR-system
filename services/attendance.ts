@@ -1,30 +1,29 @@
 import { api } from "./api"
 
 export interface Attendance {
-  id: number
-  employeeId: number // DTO එකට අනුව employeeId භාවිතා කිරීම වඩාත් නිවැරදියි
-  date: string
-  clockIn: string
-  clockOut: string | null
-  status: "Present" | "Absent" | "Late"
-  workHours: number | null
+  id: number;
+  employeeId: number;
+  employeeName?: string;
+  date: string;
+  clockIn: string;
+  clockOut: string | null;
+  status: "Present" | "Absent" | "Late";
+  workHours: number | null;
 }
 
 export interface MarkAttendanceData {
-  employeeId: number
-  status: string
-  clockIn: string
+  employeeId: number;
+  status: string;
+  clockIn: string; // මෙය "08:30" ලෙස තිබිය යුතුය
 }
 
 export const attendanceService = {
-  // පැමිණීම සටහන් කිරීම
+  /**
+   * පැමිණීම සටහන් කිරීම
+   * Backend Endpoint: POST /api/v1/attendance
+   */
   async markAttendance(data: MarkAttendanceData): Promise<Attendance> {
-    // Backend controller එකට අනුව: POST /api/v1/attendance
+    // .data ඉවත් කර ඇත්තේ TypeScript error එක මඟහැරීමටයි
     return api.post<Attendance>("/api/v1/attendance", data);
-  },
-
-  /* සටහන: ඔබගේ Backend AttendanceController එකේ 
-     GET ක්‍රම (getAllAttendance, getAttendanceByCompany) දැනට දක්නට නැත.
-     එම නිසා ඒවා භාවිතා කිරීමට පෙර Backend එකට අදාළ GET Endpoints එකතු කළ යුතුය.
-  */
+  }
 }
