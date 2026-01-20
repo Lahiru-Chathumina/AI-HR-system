@@ -2,7 +2,7 @@ import { api } from "./api"
 
 export interface Attendance {
   id: number
-  employeeName: string
+  employeeId: number // DTO එකට අනුව employeeId භාවිතා කිරීම වඩාත් නිවැරදියි
   date: string
   clockIn: string
   clockOut: string | null
@@ -17,18 +17,14 @@ export interface MarkAttendanceData {
 }
 
 export const attendanceService = {
-  // සියලුම පැමිණීමේ වාර්තා ලබා ගැනීම
-  async getAllAttendance(): Promise<Attendance[]> {
-    return api.get<Attendance[]>("/api/v1/attendance")
-  },
-
-  // සමාගමට අනුව පැමිණීමේ වාර්තා ලබා ගැනීම
-  async getAttendanceByCompany(companyId: number): Promise<Attendance[]> {
-    return api.get<Attendance[]>(`/api/v1/attendance/company/${companyId}`)
-  },
-
   // පැමිණීම සටහන් කිරීම
   async markAttendance(data: MarkAttendanceData): Promise<Attendance> {
-    return api.post<Attendance>("/api/v1/attendance", data)
-  }
+    // Backend controller එකට අනුව: POST /api/v1/attendance
+    return api.post<Attendance>("/api/v1/attendance", data);
+  },
+
+  /* සටහන: ඔබගේ Backend AttendanceController එකේ 
+     GET ක්‍රම (getAllAttendance, getAttendanceByCompany) දැනට දක්නට නැත.
+     එම නිසා ඒවා භාවිතා කිරීමට පෙර Backend එකට අදාළ GET Endpoints එකතු කළ යුතුය.
+  */
 }
