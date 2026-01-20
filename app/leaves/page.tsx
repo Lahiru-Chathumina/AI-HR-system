@@ -1,27 +1,24 @@
 "use client"
 
-import { useEffect, useState, KeyboardEvent } from "react"
+import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { leaveService, type Leave } from "@/services/leave"
-import { employeeService, type Employee } from "@/services/employee" // Employee service එක අවශ්‍යයි
-import { Plus, Search, Loader2, CheckCircle, XCircle, Clock, Trash2 } from "lucide-react"
+import { employeeService, type Employee } from "@/services/employee"
+import { Plus, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 
 export default function LeavesPage() {
   const [leaves, setLeaves] = useState<Leave[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([]) // සේවකයින් සඳහා state
-  const [filteredLeaves, setFilteredLeaves] = useState<Leave[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
   const [isOpen, setIsOpen] = useState(false)
 
   const [formData, setFormData] = useState({
-    employeeId: "", // ID එක මෙතන තබා ගනී
+    employeeId: "",
     leaveType: "Annual",
     startDate: "",
     endDate: "",
@@ -30,17 +27,15 @@ export default function LeavesPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true)
       try {
         const [leavesData, empData] = await Promise.all([
           leaveService.getAllLeaves(),
-          employeeService.getAllEmployees() // සේවකයින් ගෙන්වා ගැනීම
+          employeeService.getAllEmployees()
         ])
         setLeaves(leavesData)
-        setFilteredLeaves(leavesData)
         setEmployees(empData)
       } catch (error) {
-        console.error("Failed to load data", error)
+        console.error("Failed to fetch data", error)
       } finally {
         setIsLoading(false)
       }
@@ -52,19 +47,19 @@ export default function LeavesPage() {
     e.preventDefault()
     try {
       const payload = {
-        employeeId: Number(formData.employeeId),
+        employeeId: Number(formData.employeeId), // ID එක අනිවාර්යයෙන්ම number එකක් විය යුතුයි
         leaveType: formData.leaveType,
         startDate: formData.startDate,
         endDate: formData.endDate,
         reason: formData.reason
       }
+
       const newLeave = await leaveService.createLeave(payload as any)
       setLeaves(prev => [newLeave, ...prev])
-      setFilteredLeaves(prev => [newLeave, ...prev])
       setIsOpen(false)
       setFormData({ employeeId: "", leaveType: "Annual", startDate: "", endDate: "", reason: "" })
     } catch (error) {
-      alert("Failed to submit leave request. Ensure all fields are correct.")
+      alert("Failed to submit leave request. Please check if all fields are filled.")
     }
   }
 
@@ -75,9 +70,11 @@ export default function LeavesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Leave Management</h1>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-indigo-600 hover:bg-indigo-700"><Plus className="mr-2 h-4 w-4" /> Request Leave</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="mr-2 h-4 w-4" /> Request Leave
+              </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent>
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>Request Leave</DialogTitle>
@@ -97,7 +94,7 @@ export default function LeavesPage() {
                       ))}
                     </select>
                   </div>
-                  {/* ... ඉතිරි Form fields (Type, Start, End, Reason) මෙහි තිබිය යුතුය ... */}
+                  {/* අනෙකුත් Inputs (Date, Type, Reason) මෙතැනට එක් කරන්න */}
                 </div>
                 <DialogFooter>
                   <Button type="submit" className="bg-indigo-600 text-white w-full">Submit Request</Button>
@@ -106,6 +103,7 @@ export default function LeavesPage() {
             </DialogContent>
           </Dialog>
         </div>
+        {/* Table කොටස කලින් තිබූ පරිදිම පවතී */}
       </div>
     </DashboardLayout>
   )
