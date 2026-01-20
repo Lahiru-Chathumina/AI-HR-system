@@ -11,19 +11,15 @@ export interface Attendance {
   workHours: number | null;
 }
 
-export interface MarkAttendanceData {
-  employeeId: number;
-  status: string;
-  clockIn: string; // මෙය "08:30" ලෙස තිබිය යුතුය
-}
-
 export const attendanceService = {
-  /**
-   * පැමිණීම සටහන් කිරීම
-   * Backend Endpoint: POST /api/v1/attendance
-   */
-  async markAttendance(data: MarkAttendanceData): Promise<Attendance> {
-    // .data ඉවත් කර ඇත්තේ TypeScript error එක මඟහැරීමටයි
-    return api.post<Attendance>("/api/v1/attendance", data);
+  // සියලුම පැමිණීම් ලබා ගැනීම
+  async getAllAttendance(): Promise<Attendance[]> {
+    return api.get<Attendance[]>("/api/v1/attendance");
+  },
+
+  // පැමිණීම සටහන් කිරීම (.data error එක මෙහිදී ඉවත් කර ඇත)
+  async markAttendance(data: any): Promise<Attendance> {
+    const response = await api.post<Attendance>("/api/v1/attendance", data);
+    return response; 
   }
 }

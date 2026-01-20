@@ -19,6 +19,10 @@ export interface CreateEmployeeData {
 }
 
 export const employeeService = {
+async getAllEmployees(): Promise<Employee[]> {
+    return api.get<Employee[]>("/api/v1/employees");
+  },
+
   // සේවා ස්ථානය අනුව සේවකයින් ලබා ගැනීම
   async getEmployeesByCompany(companyId: number): Promise<Employee[]> {
     try {
