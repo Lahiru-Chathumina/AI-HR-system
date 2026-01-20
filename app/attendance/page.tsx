@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { attendanceService, type Attendance } from "@/services/attendance"
 import { employeeService, type Employee } from "@/services/employee"
-import { UserCheck, LogIn, Loader2, Clock, Calendar, Users } from "lucide-react"
+import { UserCheck, LogIn, Loader2, Clock, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -17,16 +17,21 @@ export default function AttendancePage() {
   const [isLogOpen, setIsLogOpen] = useState(false)
   const [newLog, setNewLog] = useState({ employeeId: "", status: "Present", clockIn: "08:30" })
 
-  // Data ටික Load කරගන්න විදිහ
+  // Data Load කිරීම
   useEffect(() => {
     const loadData = async () => {
       try {
+        setIsLoading(true);
         const [attData, empData] = await Promise.all([
           attendanceService.getAllAttendance(),
           employeeService.getAllEmployees()
         ]);
-        setAttendance(attData);
-        setEmployees(empData);
+        
+        // Array එකක් බව තහවුරු කරගෙන Data set කිරීම
+        setAttendance(Array.isArray(attData) ? attData : []);
+        setEmployees(Array.isArray(empData) ? empData : []);
+        
+        console.log("Employees loaded:", empData);
       } catch (e) {
         console.error("Failed to load data", e);
       } finally {
@@ -47,10 +52,13 @@ export default function AttendancePage() {
         clockIn: newLog.clockIn
       });
       
+      // අලුත් දත්තය Table එකට එකතු කිරීම
       setAttendance(prev => [entry, ...prev]);
       setIsLogOpen(false);
       setNewLog({ employeeId: "", status: "Present", clockIn: "08:30" });
+      alert("පැමිණීම සාර්ථකව සටහන් විය!");
     } catch (error) {
+      console.error(error);
       alert("දත්ත ඇතුළත් කිරීම අසාර්ථකයි. සේවකයා පද්ධතියේ ඉන්නවාදැයි බලන්න.");
     }
   };
@@ -62,7 +70,7 @@ export default function AttendancePage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 p-4 md:p-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -86,14 +94,14 @@ export default function AttendancePage() {
                   <div className="space-y-2">
                     <Label className="text-slate-300">Select Employee</Label>
                     <select 
-                      className="flex h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="flex h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                       value={newLog.employeeId}
                       required
                       onChange={(e) => setNewLog({...newLog, employeeId: e.target.value})}
                     >
-                      <option value="" className="text-slate-400">Choose an employee...</option>
+                      <option value="" className="bg-slate-900 text-white">Choose an employee...</option>
                       {employees.map(emp => (
-                        <option key={emp.id} value={emp.id} className="text-black">
+                        <option key={emp.id} value={emp.id} className="bg-slate-900 text-white">
                           {emp.name}
                         </option>
                       ))}
@@ -112,13 +120,13 @@ export default function AttendancePage() {
                     <div className="space-y-2">
                       <Label className="text-slate-300">Status</Label>
                       <select 
-                        className="flex h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                        className="flex h-11 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
                         value={newLog.status}
                         onChange={(e) => setNewLog({...newLog, status: e.target.value})}
                       >
-                        <option value="Present" className="text-black">Present</option>
-                        <option value="Late" className="text-black">Late</option>
-                        <option value="Absent" className="text-black">Absent</option>
+                        <option value="Present" className="bg-slate-900 text-white">Present</option>
+                        <option value="Late" className="bg-slate-900 text-white">Late</option>
+                        <option value="Absent" className="bg-slate-900 text-white">Absent</option>
                       </select>
                     </div>
                   </div>
@@ -160,7 +168,7 @@ export default function AttendancePage() {
                 ) : (
                   attendance.map((record) => (
                     <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold">{record.employeeName}</td>
+                      <td className="px-6 py-4 font-semibold">{record.employeeName || "Unknown"}</td>
                       <td className="px-6 py-4 text-emerald-600 font-medium"><LogIn className="inline h-4 w-4 mr-1" /> {record.clockIn}</td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -181,7 +189,6 @@ export default function AttendancePage() {
   )
 }
 
-// Stats Card Component
 function StatCard({ title, value, color, icon }: any) {
   return (
     <div className={`${color} rounded-2xl p-6 text-white shadow-lg`}>
