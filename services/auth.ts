@@ -32,7 +32,7 @@ export interface RegisterRequest {
 
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
-    return api.post<LoginResponse>("/api/v1/auth/login", data)
+    return api.post<LoginResponse>("/api/auth/login", data)
   },
 
   async register(data: RegisterRequest): Promise<LoginResponse> {
