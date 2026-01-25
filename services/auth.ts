@@ -7,35 +7,30 @@ export interface LoginRequest {
   password: string
 }
 
+// Backend එකෙන් එන AuthResponseDTO එකට ගැලපෙන විදියට
 export interface LoginResponse {
   token: string
-  company: {
-    id: number
-    name: string
-    email: string
-    phone?: string
-    address?: string
-    taxId: string; // මෙයද මෙහි ඇතුළත් කිරීම සුදුසුයි
-    registrationDate?: string
-  }
+  name: string    // සමාගමේ නම
+  role: string    // ROLE_COMPANY
 }
 
-// මෙන්න මේ interface එකට taxId ඇතුළත් කරන්න
 export interface RegisterRequest {
   name: string
   email: string
   password: string
-  phone: string;  // Backend validation එකට ගැලපෙන්න ? ඉවත් කළා
-  taxId: string;  // අනිවාර්යයෙන්ම තිබිය යුතුයි (මෙය එකතු කරන්න)
+  phone: string
+  taxId: string
   address?: string
 }
 
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
+    // Backend එකේ v1 පථය නිවැරදිව භාවිතා කර ඇත
     return api.post<LoginResponse>("/api/v1/auth/login", data)
   },
 
   async register(data: RegisterRequest): Promise<LoginResponse> {
+    // Registration පථය
     return api.post<LoginResponse>("/api/companies/add", data)
   },
 }
